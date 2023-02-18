@@ -24,17 +24,21 @@
 				<div></div>
 				<div></div>
 			</div>
-
-			<p v-if="!isLoading && (!weather || !weather.name)" class="error">
-				Oops! Wrong input. Enter a correct city or country .
-			</p>
+			<!-- v-if="!isLoading && (!weather || !weather.name)" -->
+			<div class="modal" v-if="!isLoading && (!weather || !weather.name)">
+				<font-awesome-icon
+					icon="fa-solid fa-circle-exclamation"
+					size="xl"
+					color="#0081B4"
+				/>
+				<p class="error">
+					Oops! Failed to fetch. Enter a correct city or country .
+				</p>
+				<font-awesome-icon icon="fa-solid fa-x" cursor="pointer" @click="ok" />
+			</div>
 			<div
 				class="search-data"
-				v-if="
-					typeof weather.main != 'undefined' && !isLoading
-					// weather &&
-					// weather.length > 0
-				"
+				v-if="typeof weather.main != 'undefined' && !isLoading"
 			>
 				<h2 class="town">{{ weather.name }}, {{ weather?.sys.country }}</h2>
 				<p class="date">{{ getDate() }}</p>
@@ -55,6 +59,7 @@ export default {
 			weather: {},
 			error: null,
 			isLoading: false,
+			previous: null,
 		}
 	},
 	methods: {
@@ -74,10 +79,7 @@ export default {
 					this.isLoading = false
 					this.weather = data
 				})
-				.catch(error => {
-					console.log(error)
-				})
-
+			this.previous = this.enteredValue
 			this.enteredValue = ''
 		},
 		getDate() {
@@ -109,6 +111,28 @@ export default {
 			const month = months[d.getMonth()]
 			return `${day} ${d.getDate()} ${month} ${d.getFullYear()}`
 		},
+		ok() {
+			this.weather.name = this.previous
+		},
+	},
+	mounted() {
+		this.isLoading = true
+		fetch(
+			`https://api.openweathermap.org/data/2.5/weather?q=tashkent&units=metric&appid=${this.api_key}`
+		)
+			.then(response =>
+				// if (response.ok) {
+				// 	response.json()
+				// }
+				// throw new Error('Something went wrong')
+				response.json()
+			)
+			.then(data => {
+				this.isLoading = false
+				this.weather = data
+			})
+		this.previous = this.enteredValue
+		this.enteredValue = ''
 	},
 }
 </script>
@@ -142,6 +166,20 @@ main {
 	);
 	text-align: center;
 }
+
+.modal {
+	background: white;
+	padding: 2rem;
+	width: 20rem;
+	height: 9rem;
+	display: flex;
+	gap: 1rem;
+	position: absolute;
+	top: 120px;
+	right: 74px;
+	border-radius: 16px;
+}
+
 .search-box {
 	margin-bottom: 3rem;
 }
@@ -290,10 +328,10 @@ main {
 }
 
 .error {
-	font-size: 40px;
-	color: #d0f114;
+	font-size: 20px;
+	color: black;
 	font-weight: bold;
 	text-align: left;
-	padding-left: 5rem;
+	/* padding-left: 5rem; */
 }
 </style>
